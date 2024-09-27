@@ -1,0 +1,1 @@
+[Major Telegram](https://t.me/major/start?startapp=6094625904)
