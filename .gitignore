@@ -6,3 +6,4 @@ venv
 *.txt
 !tokens.txt
 !queries.txt
+!requirements.txt
