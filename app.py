@@ -82,16 +82,16 @@ class Major:
 
     async def generate_token(self, query: str):
         url = 'https://major.bot/api/auth/tg/'
-        payload = {"init_data":query}
+        data = json.dumps({"init_data":query})
         headers = {
             **self.headers,
-            'Content-Length': str(len(payload)),
+            'Content-Length': str(len(data)),
             'Content-Type': 'application/json',
             'Origin': 'https://major.bot'
         }
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
-                async with session.post(url, headers=headers, json=payload) as response:
+                async with session.post(url, headers=headers, data=data) as response:
                     response.raise_for_status()
                     tg_auth = await response.json()
                     parsed_query = parse_qs(query)
@@ -240,7 +240,7 @@ class Major:
 
     async def complete_task(self, token: str, task_title: str, task_award: int, payload: dict):
         url = 'https://major.bot/api/tasks/'
-        data = payload
+        data = json.dumps(payload)
         headers = {
             **self.headers,
             'Authorization': token,
@@ -250,7 +250,7 @@ class Major:
         }
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, json=data) as response:
+                async with session.post(url=url, headers=headers, data=data) as response:
                     if response.status == 400: return
                     elif response.status in [500, 520]:
                         return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Complete Tasks ]{Style.RESET_ALL}")
