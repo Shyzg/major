@@ -239,17 +239,17 @@ class Major:
 
     async def complete_task(self, token: str, task_title: str, task_award: int, payload: dict):
         url = 'https://major.bot/api/tasks/'
-        data = json.dumps(payload)
+        json = payload
         headers = {
             **self.headers,
             'Authorization': token,
-            'Content-Length': str(len(data)),
+            'Content-Length': str(len(json)),
             'Content-Type': 'application/json',
             'Origin': 'https://major.bot'
         }
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data) as response:
+                async with session.post(url=url, headers=headers, json=json) as response:
                     if response.status == 400: return
                     elif response.status in [500, 520]:
                         return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Complete Tasks ]{Style.RESET_ALL}")
@@ -459,10 +459,10 @@ class Major:
                                         if task_answer is not None:
                                             if task['title'] in task_answer:
                                                 answer = task_answer[task['title']]
-                                                await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id'],'payload':{'code':answer}})
+                                                await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={"task_id":task['id'],"payload":{'code':answer}})
                                                 await asyncio.sleep(1)
                                     else:
-                                        await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id']})
+                                        await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={"task_id":task['id']})
                                         await asyncio.sleep(1)
                                 else:
                                     self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ {task['title']} Completed ]{Style.RESET_ALL}")
