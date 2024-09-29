@@ -134,7 +134,7 @@ class Major:
                         if visit['is_allowed']:
                             return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ Claimed Daily Visit ]{Style.RESET_ALL}")
                         return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Subscribe Major Community To Claim Your Daily Visit Bonus And Increase Your Streak ]{Style.RESET_ALL}")
-                    return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Visit Already Claimed ]{Style.RESET_ALL}")
+                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Daily Visit Already Claimed ]{Style.RESET_ALL}")
         except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Daily Visit: {str(e)} ]{Style.RESET_ALL}")
         except (Exception, aiohttp.ContentTypeError) as e:
