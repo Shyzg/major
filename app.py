@@ -2,12 +2,8 @@ from colorama import *
 from datetime import datetime, timedelta
 from fake_useragent import FakeUserAgent
 from faker import Faker
-from requests import (
-    JSONDecodeError,
-    RequestException,
-    Session,
-)
 from urllib.parse import parse_qs
+import aiohttp
 import asyncio
 import json
 import os
@@ -94,31 +90,18 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers, data=data) as response:
-                response.raise_for_status()
-                tg_auth = response.json()
-                parsed_query = parse_qs(query)
-                user_data_json = parsed_query['user'][0]
-                user_data = json.loads(user_data_json)
-                token = f"Bearer {tg_auth['access_token']}"
-                id = user_data['id']
-                name = user_data.get('first_name', self.faker.user_name())
-                return (token, id, name)
-        except RequestException as e:
-            if response.status_code in [500, 520]:
-                self.print_timestamp(
-                    f"{Fore.YELLOW + Style.BRIGHT}[ Failed To Process {query} ]{Style.RESET_ALL}"
-                    f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                    f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Generate Token ]{Style.RESET_ALL}"
-                )
-                return None
-            self.print_timestamp(
-                f"{Fore.YELLOW + Style.BRIGHT}[ Failed To Process {query} ]{Style.RESET_ALL}"
-                f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}"
-            )
-            return None
-        except (Exception, JSONDecodeError) as e:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url, headers=headers, data=data) as response:
+                    response.raise_for_status()
+                    tg_auth = await response.json()
+                    parsed_query = parse_qs(query)
+                    user_data_json = parsed_query['user'][0]
+                    user_data = json.loads(user_data_json)
+                    token = f"Bearer {tg_auth['access_token']}"
+                    id = user_data['id']
+                    name = user_data.get('first_name', self.faker.user_name())
+                    return (token, id, name)
+        except (aiohttp.ClientResponseError, aiohttp.ContentTypeError, Exception) as e:
             self.print_timestamp(
                 f"{Fore.YELLOW + Style.BRIGHT}[ Failed To Process {query} ]{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
@@ -141,19 +124,20 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers) as response:
-                response.raise_for_status()
-                visit = response.json()
-                if visit['is_increased']:
-                    if visit['is_allowed']:
-                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ Claimed Daily Visit ]{Style.RESET_ALL}")
-                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Subscribe Major Community To Claim Your Daily Visit Bonus And Increase Your Streak ]{Style.RESET_ALL}")
-                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Daily Visit Already Claimed ]{Style.RESET_ALL}")
-        except RequestException as e:
-            if response.status_code in [500, 520]:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Daily Visit ]{Style.RESET_ALL}")
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers) as response:
+                    if response.status in [500, 520]:
+                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Daily Visit ]{Style.RESET_ALL}")
+                    response.raise_for_status()
+                    visit = await response.json()
+                    if visit['is_increased']:
+                        if visit['is_allowed']:
+                            return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ Claimed Daily Visit ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Subscribe Major Community To Claim Your Daily Visit Bonus And Increase Your Streak ]{Style.RESET_ALL}")
+                    return self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ Daily Visit Already Claimed ]{Style.RESET_ALL}")
+        except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Daily Visit: {str(e)} ]{Style.RESET_ALL}")
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Daily Visit: {str(e)} ]{Style.RESET_ALL}")
 
     async def streak(self, token: str):
@@ -163,16 +147,17 @@ class Major:
             'Authorization': token
         }
         try:
-            with Session().get(url=url, headers=headers) as response:
-                response.raise_for_status()
-                return response.json()
-        except RequestException as e:
-            if response.status_code in [500, 520]:
-                self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching Streak ]{Style.RESET_ALL}")
-                return None
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url=url, headers=headers) as response:
+                    if response.status in [500, 520]:
+                        self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Fetching Streak ]{Style.RESET_ALL}")
+                        return None
+                    response.raise_for_status()
+                    return await response.json()
+        except aiohttp.ClientResponseError as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Streak: {str(e)} ]{Style.RESET_ALL}")
             return None
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Streak: {str(e)} ]{Style.RESET_ALL}")
             return None
 
@@ -183,16 +168,17 @@ class Major:
             'Authorization': token
         }
         try:
-            with Session().get(url=url, headers=headers) as response:
-                response.raise_for_status()
-                return response.json()
-        except RequestException as e:
-            if response.status_code in [500, 520]:
-                self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching User ]{Style.RESET_ALL}")
-                return None
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url=url, headers=headers) as response:
+                    if response.status in [500, 520]:
+                        self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Fetching User ]{Style.RESET_ALL}")
+                        return None
+                    response.raise_for_status()
+                    return await response.json()
+        except aiohttp.ClientResponseError as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching User: {str(e)} ]{Style.RESET_ALL}")
             return None
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching User: {str(e)} ]{Style.RESET_ALL}")
             return None
 
@@ -205,11 +191,12 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers) as response:
-                response.raise_for_status()
-                join_squad = response.json()
-                if join_squad['status'] == 'ok': return True
-        except (Exception, JSONDecodeError, RequestException):
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers) as response:
+                    response.raise_for_status()
+                    join_squad = await response.json()
+                    if join_squad['status'] == 'ok': return True
+        except (Exception, aiohttp.ClientResponseError, aiohttp.ContentTypeError):
             return False
 
     async def leave_squad(self, token: str):
@@ -221,11 +208,12 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers) as response:
-                response.raise_for_status()
-                leave_squad = response.json()
-                if leave_squad['status'] == 'ok': return await self.join_squad(token=token)
-        except (Exception, JSONDecodeError, RequestException):
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers) as response:
+                    response.raise_for_status()
+                    leave_squad = await response.json()
+                    if leave_squad['status'] == 'ok': return await self.join_squad(token=token)
+        except (Exception, aiohttp.ClientResponseError, aiohttp.ContentTypeError):
             return False
 
     async def tasks(self, token: str, type: str):
@@ -235,16 +223,17 @@ class Major:
             'Authorization': token
         }
         try:
-            with Session().get(url=url, headers=headers) as response:
-                response.raise_for_status()
-                return response.json()
-        except RequestException as e:
-            if response.status_code in [500, 520]:
-                self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching Tasks ]{Style.RESET_ALL}")
-                return None
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url=url, headers=headers) as response:
+                    if response.status in [500, 520]:
+                        self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Fetching Tasks ]{Style.RESET_ALL}")
+                        return None
+                    response.raise_for_status()
+                    return await response.json()
+        except aiohttp.ClientResponseError as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Tasks: {str(e)} ]{Style.RESET_ALL}")
             return None
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Tasks: {str(e)} ]{Style.RESET_ALL}")
             return None
 
@@ -259,47 +248,50 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers, data=data) as response:
-                response.raise_for_status()
-                complete_task = response.json()
-                if complete_task['is_completed']:
-                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {task_award} From {task_title} ]{Style.RESET_ALL}")
-                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task_title} Isn\'t Completed ]{Style.RESET_ALL}")
-        except RequestException as e:
-            if response.status_code == 400: return
-            elif response.status_code in [500, 520]:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Complete Tasks ]{Style.RESET_ALL}")
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers, data=data) as response:
+                    if response.status == 400: return
+                    elif response.status in [500, 520]:
+                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Complete Tasks ]{Style.RESET_ALL}")
+                    response.raise_for_status()
+                    complete_task = await response.json()
+                    if complete_task['is_completed']:
+                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {task_award} From {task_title} ]{Style.RESET_ALL}")
+                    return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {task_title} Isn\'t Completed ]{Style.RESET_ALL}")
+        except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Complete Tasks: {str(e)} ]{Style.RESET_ALL}")
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Complete Tasks: {str(e)} ]{Style.RESET_ALL}")
 
     async def task_answer(self):
         url = 'https://raw.githubusercontent.com/Shyzg/major/refs/heads/main/answer.json'
         try:
-            with Session().get(url=url) as response:
-                response.raise_for_status()
-                response_answer = json.loads(response.text)
-                return response_answer['youtube']
-        except RequestException as e:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url=url) as response:
+                    response.raise_for_status()
+                    response_answer = json.loads(await response.text())
+                    return response_answer['youtube']
+        except aiohttp.ClientResponseError as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Get Task Answer: {str(e)} ]{Style.RESET_ALL}")
             return None
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Get Task Answer: {str(e)} ]{Style.RESET_ALL}")
             return None
 
     async def get_choices_durov(self, token: str):
         url = 'https://raw.githubusercontent.com/Shyzg/major/refs/heads/main/answer.json'
         try:
-            with Session().get(url=url) as response:
-                response.raise_for_status()
-                response_answer = json.loads(response.text)
-                timestam_answer = datetime.fromtimestamp(response_answer['expires']).astimezone().timestamp()
-                if timestam_answer > datetime.now().astimezone().timestamp():
-                    return await self.durov(token=token, answer=response_answer['answer'])
-                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Puzzle Durov ]{Style.RESET_ALL}")
-        except RequestException as e:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url=url) as response:
+                    response.raise_for_status()
+                    response_answer = json.loads(await response.text())
+                    timestam_answer = datetime.fromtimestamp(response_answer['expires']).astimezone().timestamp()
+                    if timestam_answer > datetime.now().astimezone().timestamp():
+                        return await self.durov(token=token, answer=response_answer['answer'])
+                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ You\'ve Already Play Puzzle Durov ]{Style.RESET_ALL}")
+        except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Get Choices Durov: {str(e)} ]{Style.RESET_ALL}")
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Get Choices Durov: {str(e)} ]{Style.RESET_ALL}")
 
     async def durov(self, token: str, answer: dict):
@@ -313,19 +305,20 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers, data=data) as response:
-                response.raise_for_status()
-                return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got 5000 From Puzzle Durov ]{Style.RESET_ALL}")
-        except RequestException as e:
-            if response.status_code == 400:
-                error_durov = response.json()
-                if 'detail' in error_durov:
-                    if 'blocked_until' in error_durov['detail']:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Puzzle Durov At {datetime.fromtimestamp(error_durov['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
-            elif response.status_code in [500, 520]:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Puzzle Durov ]{Style.RESET_ALL}")
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers, data=data) as response:
+                    if response.status == 400:
+                        error_coins = await response.json()
+                        if 'detail' in error_coins:
+                            if 'blocked_until' in error_coins['detail']:
+                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Puzzle Durov At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
+                    elif response.status in [500, 520]:
+                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Play Puzzle Durov ]{Style.RESET_ALL}")
+                    response.raise_for_status()
+                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got 5000 From Puzzle Durov ]{Style.RESET_ALL}")
+        except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Durov: {str(e)} ]{Style.RESET_ALL}")
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Durov: {str(e)} ]{Style.RESET_ALL}")
 
     async def coins(self, token: str, reward_coins: int):
@@ -339,21 +332,22 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers, data=data) as response:
-                response.raise_for_status()
-                coins = response.json()
-                if coins['success']:
-                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_coins} From Hold Coin ]{Style.RESET_ALL}")
-        except RequestException as e:
-            if response.status_code == 400:
-                error_coins = response.json()
-                if 'detail' in error_coins:
-                    if 'blocked_until' in error_coins['detail']:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Hold Coin At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
-            elif response.status_code in [500, 520]:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Hold Coin ]{Style.RESET_ALL}")
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers, data=data) as response:
+                    if response.status == 400:
+                        error_coins = await response.json()
+                        if 'detail' in error_coins:
+                            if 'blocked_until' in error_coins['detail']:
+                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Hold Coin At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
+                    elif response.status in [500, 520]:
+                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Play Hold Coin ]{Style.RESET_ALL}")
+                    response.raise_for_status()
+                    coins = await response.json()
+                    if coins['success']:
+                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_coins} From Hold Coin ]{Style.RESET_ALL}")
+        except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Hold Coins: {str(e)} ]{Style.RESET_ALL}")
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Play Hold Coins: {str(e)} ]{Style.RESET_ALL}")
 
     async def roulette(self, token: str):
@@ -366,20 +360,21 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers) as response:
-                response.raise_for_status()
-                roulette = response.json()
-                return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {roulette['rating_award']} From Roulette ]{Style.RESET_ALL}")
-        except RequestException as e:
-            if response.status_code == 400:
-                error_roulette = response.json()
-                if 'detail' in error_roulette:
-                    if 'blocked_until' in error_roulette['detail']:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Roulette At {datetime.fromtimestamp(error_roulette['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
-            elif response.status_code in [500, 520]:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Roulette ]{Style.RESET_ALL}")
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers) as response:
+                    if response.status == 400:
+                        error_coins = await response.json()
+                        if 'detail' in error_coins:
+                            if 'blocked_until' in error_coins['detail']:
+                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Roulette At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
+                    elif response.status in [500, 520]:
+                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Play Roulette ]{Style.RESET_ALL}")
+                    response.raise_for_status()
+                    roulette = await response.json()
+                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {roulette['rating_award']} From Roulette ]{Style.RESET_ALL}")
+        except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Roulette: {str(e)} ]{Style.RESET_ALL}")
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Play Rouelette: {str(e)} ]{Style.RESET_ALL}")
 
     async def swipe_coin(self, token: str, reward_swipe_coins: int):
@@ -393,21 +388,22 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
-            with Session().post(url=url, headers=headers, data=data) as response:
-                response.raise_for_status()
-                swipe_coin = response.json()
-                if swipe_coin['success']:
-                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_swipe_coins} From Swipe Coin ]{Style.RESET_ALL}")
-        except RequestException as e:
-            if response.status_code == 400:
-                error_swipe = response.json()
-                if 'detail' in error_swipe:
-                    if 'blocked_until' in error_swipe['detail']:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Swipe Coin At {datetime.fromtimestamp(error_swipe['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
-            elif response.status_code in [500, 520]:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Swipe Coin ]{Style.RESET_ALL}")
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.post(url=url, headers=headers, data=data) as response:
+                    if response.status == 400:
+                        error_coins = await response.json()
+                        if 'detail' in error_coins:
+                            if 'blocked_until' in error_coins['detail']:
+                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Swipe Coin At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
+                    elif response.status in [500, 520]:
+                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Play Swipe Coin ]{Style.RESET_ALL}")
+                    response.raise_for_status()
+                    swipe_coin = await response.json()
+                    if swipe_coin['success']:
+                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_swipe_coins} From Swipe Coin ]{Style.RESET_ALL}")
+        except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Swipe Coin: {str(e)} ]{Style.RESET_ALL}")
-        except (Exception, JSONDecodeError) as e:
+        except (Exception, aiohttp.ContentTypeError) as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Play Swipe Coin: {str(e)} ]{Style.RESET_ALL}")
 
     async def main(self, queries: str):
@@ -463,11 +459,13 @@ class Major:
                                         if task_answer is not None:
                                             if task['title'] in task_answer:
                                                 answer = task_answer[task['title']]
-                                                await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id'],'payload':{'code':answer}})
-                                                await asyncio.sleep(1)
+                                                await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={"task_id":task['id'],"payload":{'code':answer}})
+                                                await asyncio.sleep(2)
                                     else:
-                                        await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id']})
-                                        await asyncio.sleep(1)
+                                        await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={"task_id":task['id']})
+                                        await asyncio.sleep(2)
+                                else:
+                                    self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ {task['title']} Completed ]{Style.RESET_ALL}")
 
                     user = await self.user(token=token, id=id)
                     total_rating += user['rating'] if user else 0
