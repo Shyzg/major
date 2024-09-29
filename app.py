@@ -127,7 +127,7 @@ class Major:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
                 async with session.post(url=url, headers=headers) as response:
                     if response.status in [500, 520]:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Daily Visit ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Daily Visit ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     visit = await response.json()
                     if visit['is_increased']:
@@ -150,7 +150,7 @@ class Major:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
                 async with session.get(url=url, headers=headers) as response:
                     if response.status in [500, 520]:
-                        self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Fetching Streak ]{Style.RESET_ALL}")
+                        self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching Streak ]{Style.RESET_ALL}")
                         return None
                     response.raise_for_status()
                     return await response.json()
@@ -171,7 +171,7 @@ class Major:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
                 async with session.get(url=url, headers=headers) as response:
                     if response.status in [500, 520]:
-                        self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Fetching User ]{Style.RESET_ALL}")
+                        self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching User ]{Style.RESET_ALL}")
                         return None
                     response.raise_for_status()
                     return await response.json()
@@ -226,7 +226,7 @@ class Major:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
                 async with session.get(url=url, headers=headers) as response:
                     if response.status in [500, 520]:
-                        self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Fetching Tasks ]{Style.RESET_ALL}")
+                        self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching Tasks ]{Style.RESET_ALL}")
                         return None
                     response.raise_for_status()
                     return await response.json()
@@ -252,12 +252,12 @@ class Major:
                 async with session.post(url=url, headers=headers, data=data) as response:
                     if response.status == 400: return
                     elif response.status in [500, 520]:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Complete Tasks ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Complete Tasks ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     complete_task = await response.json()
                     if complete_task['is_completed']:
                         return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {task_award} From {task_title} ]{Style.RESET_ALL}")
-                    return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {task_title} Isn\'t Completed ]{Style.RESET_ALL}")
+                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task_title} Isn\'t Completed ]{Style.RESET_ALL}")
         except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Complete Tasks: {str(e)} ]{Style.RESET_ALL}")
         except (Exception, aiohttp.ContentTypeError) as e:
@@ -313,7 +313,7 @@ class Major:
                             if 'blocked_until' in error_coins['detail']:
                                 return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Puzzle Durov At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
                     elif response.status in [500, 520]:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Play Puzzle Durov ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Puzzle Durov ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got 5000 From Puzzle Durov ]{Style.RESET_ALL}")
         except aiohttp.ClientResponseError as e:
@@ -340,7 +340,7 @@ class Major:
                             if 'blocked_until' in error_coins['detail']:
                                 return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Hold Coin At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
                     elif response.status in [500, 520]:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Play Hold Coin ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Hold Coin ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     coins = await response.json()
                     if coins['success']:
@@ -368,7 +368,7 @@ class Major:
                             if 'blocked_until' in error_coins['detail']:
                                 return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Roulette At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
                     elif response.status in [500, 520]:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Play Roulette ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Roulette ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     roulette = await response.json()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {roulette['rating_award']} From Roulette ]{Style.RESET_ALL}")
@@ -396,7 +396,7 @@ class Major:
                             if 'blocked_until' in error_coins['detail']:
                                 return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Swipe Coin At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
                     elif response.status in [500, 520]:
-                        return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Server Major Down While Play Swipe Coin ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Swipe Coin ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     swipe_coin = await response.json()
                     if swipe_coin['success']:
@@ -423,9 +423,9 @@ class Major:
                     user = await self.user(token=token, id=id)
                     if user is not None:
                         self.print_timestamp(
-                            f"{Fore.BLUE + Style.BRIGHT}[ Balance {user['rating']} ]{Style.RESET_ALL}"
+                            f"{Fore.GREEN + Style.BRIGHT}[ Balance {user['rating']} ]{Style.RESET_ALL}"
                             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                            f"{Fore.YELLOW + Style.BRIGHT}[ Streak {streak['streak'] if streak else 0} ]{Style.RESET_ALL}"
+                            f"{Fore.BLUE + Style.BRIGHT}[ Streak {streak['streak'] if streak else 0} ]{Style.RESET_ALL}"
                         )
                         if user['squad_id'] is None:
                             await self.join_squad(token=token)
@@ -464,8 +464,6 @@ class Major:
                                     else:
                                         await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={"task_id":task['id']})
                                         await asyncio.sleep(2)
-                                else:
-                                    self.print_timestamp(f"{Fore.MAGENTA + Style.BRIGHT}[ {task['title']} Completed ]{Style.RESET_ALL}")
 
                     user = await self.user(token=token, id=id)
                     total_rating += user['rating'] if user else 0
