@@ -288,7 +288,7 @@ class Major:
                     timestam_answer = datetime.fromtimestamp(response_answer['expires']).astimezone().timestamp()
                     if timestam_answer > datetime.now().astimezone().timestamp():
                         return await self.durov(token=token, answer=response_answer['answer'])
-                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ You\'ve Already Play Puzzle Durov ]{Style.RESET_ALL}")
+                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Puzzle Durov ]{Style.RESET_ALL}")
         except aiohttp.ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Get Choices Durov: {str(e)} ]{Style.RESET_ALL}")
         except (Exception, aiohttp.ContentTypeError) as e:
