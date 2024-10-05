@@ -3,12 +3,7 @@ from datetime import datetime, timedelta
 from fake_useragent import FakeUserAgent
 from faker import Faker
 from urllib.parse import parse_qs
-import aiohttp
-import asyncio
-import json
-import os
-import re
-import sys
+import aiohttp, asyncio, json, os, random, re, sys
 
 class Major:
     def __init__(self) -> None:
@@ -451,6 +446,7 @@ class Major:
                     )
                     for type in ['true', 'false']:
                         tasks = await self.tasks(token=token, type=type)
+                        await asyncio.sleep(random.randint(3, 5))
                         if tasks is not None:
                             for task in tasks:
                                 if not task['is_completed']:
@@ -460,11 +456,11 @@ class Major:
                                             if task['title'] in task_answer:
                                                 answer = task_answer[task['title']]
                                                 await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={"task_id":task['id'],"payload":{'code':answer}})
-                                                await asyncio.sleep(2)
+                                                await asyncio.sleep(random.randint(3, 5))
                                     else:
                                         await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={"task_id":task['id']})
-                                        await asyncio.sleep(2)
-
+                                        await asyncio.sleep(random.randint(3, 5))
+                    await asyncio.sleep(random.randint(3, 5))
                     user = await self.user(token=token, id=id)
                     total_rating += user['rating'] if user else 0
 
