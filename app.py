@@ -85,6 +85,7 @@ class Major:
             'Origin': 'https://major.bot'
         }
         try:
+            await asyncio.sleep(random.randint(3, 5))
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
                 async with session.post(url, headers=headers, data=data) as response:
                     response.raise_for_status()
@@ -415,7 +416,9 @@ class Major:
                     )
                     await self.visit(token=token)
                     streak = await self.streak(token=token)
+                    await asyncio.sleep(random.randint(3, 5))
                     user = await self.user(token=token, id=id)
+                    await asyncio.sleep(random.randint(3, 5))
                     if user is not None:
                         self.print_timestamp(
                             f"{Fore.GREEN + Style.BRIGHT}[ Balance {user['rating']} ]{Style.RESET_ALL}"
@@ -424,8 +427,10 @@ class Major:
                         )
                         if user['squad_id'] is None:
                             await self.join_squad(token=token)
+                            await asyncio.sleep(random.randint(3, 5))
                         elif user['squad_id'] != 1904705154:
                             await self.leave_squad(token=token)
+                            await asyncio.sleep(random.randint(3, 5))
 
                 for (token, id, name) in accounts:
                     self.print_timestamp(
@@ -434,9 +439,13 @@ class Major:
                         f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                     )
                     await self.get_choices_durov(token=token)
+                    await asyncio.sleep(random.randint(3, 5))
                     await self.coins(token=token, reward_coins=915)
+                    await asyncio.sleep(random.randint(3, 5))
                     await self.roulette(token=token)
+                    await asyncio.sleep(random.randint(3, 5))
                     await self.swipe_coin(token=token, reward_swipe_coins=3200)
+                    await asyncio.sleep(random.randint(3, 5))
 
                 for (token, id, name) in accounts:
                     self.print_timestamp(
@@ -460,8 +469,8 @@ class Major:
                                     else:
                                         await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={"task_id":task['id']})
                                         await asyncio.sleep(random.randint(3, 5))
-                    await asyncio.sleep(random.randint(3, 5))
                     user = await self.user(token=token, id=id)
+                    await asyncio.sleep(random.randint(3, 5))
                     total_rating += user['rating'] if user else 0
 
                 self.print_timestamp(
