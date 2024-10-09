@@ -464,10 +464,10 @@ class Major:
                     f"{Fore.GREEN + Style.BRIGHT}[ Total Rating {total_rating} ]{Style.RESET_ALL}"
                 )
 
-                sleep_timestamp = (datetime.now().astimezone() + timedelta(seconds=1800)).strftime('%X %Z')
+                sleep_timestamp = (datetime.now().astimezone() + timedelta(seconds=3600)).strftime('%X %Z')
                 self.print_timestamp(f"{Fore.CYAN + Style.BRIGHT}[ Restarting At {sleep_timestamp} ]{Style.RESET_ALL}")
 
-                await asyncio.sleep(1800)
+                await asyncio.sleep(3600)
                 self.clear_terminal()
             except Exception as e:
                 self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}")
