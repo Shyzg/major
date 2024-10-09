@@ -89,7 +89,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url, headers=headers, data=data) as response:
+                async with session.post(url, headers=headers, data=data, ssl=False) as response:
                     response.raise_for_status()
                     generate_token = await response.json()
                     user_data = json.loads(parse_qs(query)['user'][0])
@@ -118,7 +118,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers) as response:
+                async with session.post(url=url, headers=headers, ssl=False) as response:
                     if response.status in [500, 503, 520]:
                         return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Daily Visit ]{Style.RESET_ALL}")
                     response.raise_for_status()
@@ -141,7 +141,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url, headers=headers) as response:
+                async with session.get(url=url, headers=headers, ssl=False) as response:
                     if response.status in [500, 503, 520]:
                         self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching Streak ]{Style.RESET_ALL}")
                         return None
@@ -162,7 +162,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url, headers=headers) as response:
+                async with session.get(url=url, headers=headers, ssl=False) as response:
                     if response.status in [500, 503, 520]:
                         self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching User ]{Style.RESET_ALL}")
                         return None
@@ -184,7 +184,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers) as response:
+                async with session.post(url=url, headers=headers, ssl=False) as response:
                     response.raise_for_status()
                     join_squad = await response.json()
                     if join_squad['status'] == 'ok': return True
@@ -200,7 +200,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers) as response:
+                async with session.post(url=url, headers=headers, ssl=False) as response:
                     response.raise_for_status()
                     leave_squad = await response.json()
                     if leave_squad['status'] == 'ok': return await self.join_squad(token=token)
@@ -215,7 +215,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url, headers=headers) as response:
+                async with session.get(url=url, headers=headers, ssl=False) as response:
                     if response.status in [500, 503, 520]:
                         self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Fetching Tasks ]{Style.RESET_ALL}")
                         return None
@@ -239,7 +239,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data) as response:
+                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                     if response.status == 400: return
                     elif response.status in [500, 503, 520]:
                         return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Complete Tasks ]{Style.RESET_ALL}")
@@ -295,7 +295,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data) as response:
+                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                     if response.status == 400:
                         error_coins = await response.json()
                         if 'detail' in error_coins:
@@ -321,7 +321,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data) as response:
+                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                     if response.status == 400:
                         error_coins = await response.json()
                         if 'detail' in error_coins:
@@ -348,7 +348,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers) as response:
+                async with session.post(url=url, headers=headers, ssl=False) as response:
                     if response.status == 400:
                         error_coins = await response.json()
                         if 'detail' in error_coins:
@@ -375,7 +375,7 @@ class Major:
         }
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data) as response:
+                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                     if response.status == 400:
                         error_coins = await response.json()
                         if 'detail' in error_coins:
