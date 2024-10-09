@@ -405,18 +405,21 @@ class Major:
                         f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                     )
                     await self.visit(token=token)
+                    await asyncio.sleep(3)
                     streak = await self.streak(token=token)
+                    await asyncio.sleep(3)
                     user = await self.user(token=token, id=id)
-                    if user is not None:
+                    if user is not None and streak is not None:
                         self.print_timestamp(
                             f"{Fore.GREEN + Style.BRIGHT}[ Balance {user['rating']} ]{Style.RESET_ALL}"
                             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                            f"{Fore.BLUE + Style.BRIGHT}[ Streak {streak['streak'] if streak else 0} ]{Style.RESET_ALL}"
+                            f"{Fore.BLUE + Style.BRIGHT}[ Streak {streak['streak']} ]{Style.RESET_ALL}"
                         )
                         if user['squad_id'] is None:
                             await self.join_squad(token=token)
                         elif user['squad_id'] != 1904705154:
                             await self.leave_squad(token=token)
+                        total_rating += user['rating']
 
                 for (token, id, name) in accounts:
                     self.print_timestamp(
@@ -425,8 +428,11 @@ class Major:
                         f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                     )
                     await self.get_choices_durov(token=token)
+                    await asyncio.sleep(3)
                     await self.coins(token=token, reward_coins=915)
+                    await asyncio.sleep(3)
                     await self.roulette(token=token)
+                    await asyncio.sleep(3)
                     await self.swipe_coin(token=token, reward_swipe_coins=3200)
 
                 for (token, id, name) in accounts:
@@ -451,8 +457,6 @@ class Major:
                                     else:
                                         await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id']})
                                         await asyncio.sleep(random.randint(3, 5))
-                    user = await self.user(token=token, id=id)
-                    total_rating += user['rating'] if user else 0
 
                 self.print_timestamp(
                     f"{Fore.CYAN + Style.BRIGHT}[ Total Account {len(accounts)} ]{Style.RESET_ALL}"
