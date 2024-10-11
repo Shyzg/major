@@ -253,11 +253,11 @@ class Major:
         except Exception as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Complete Tasks: {str(e)} ]{Style.RESET_ALL}")
 
-    async def answer(self):
+    async def answers(self):
         url = 'https://raw.githubusercontent.com/Shyzg/answer/refs/heads/main/answer.json'
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url) as response:
+                async with session.get(url=url, ssl=False) as response:
                     response.raise_for_status()
                     return json.loads(await response.text())
         except ClientResponseError as e:
@@ -269,10 +269,10 @@ class Major:
 
     async def get_choices_durov(self, token: str):
         try:
-            answer = await self.answer()
-            if answer is not None:
-                if datetime.fromtimestamp(answer['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
-                    return await self.durov(token=token, answer=answer['major']['answer'])
+            answers = await self.answers()
+            if answers is not None:
+                if datetime.fromtimestamp(answers['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
+                    return await self.durov(token=token, answer=answers['major']['answer'])
                 return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Puzzle Durov ]{Style.RESET_ALL}")
         except Exception as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Get Choices Durov: {str(e)} ]{Style.RESET_ALL}")
@@ -441,10 +441,10 @@ class Major:
                             for task in tasks:
                                 if not task['is_completed']:
                                     if task['type'] == 'code':
-                                        answer = await self.answer()
-                                        if answer is not None:
-                                            if task['title'] in answer['youtube']:
-                                                answer = answer['youtube'][task['title']]
+                                        answers = await self.answers()
+                                        if answers is not None:
+                                            if task['title'] in answers['major']['youtube']:
+                                                answer = answers['major']['youtube'][task['title']]
                                                 await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id'],'payload':{'code':answer}})
                                                 await asyncio.sleep(random.randint(3, 5))
                                     else:
