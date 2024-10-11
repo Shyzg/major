@@ -253,14 +253,13 @@ class Major:
         except Exception as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Complete Tasks: {str(e)} ]{Style.RESET_ALL}")
 
-    async def task_answer(self):
-        url = 'https://raw.githubusercontent.com/Shyzg/major/refs/heads/main/answer.json'
+    async def answer(self):
+        url = 'https://raw.githubusercontent.com/Shyzg/answer/refs/heads/main/answer.json'
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.get(url=url) as response:
                     response.raise_for_status()
-                    response_answer = json.loads(await response.text())
-                    return response_answer['youtube']
+                    return json.loads(await response.text())
         except ClientResponseError as e:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Get Task Answer: {str(e)} ]{Style.RESET_ALL}")
             return None
@@ -269,18 +268,12 @@ class Major:
             return None
 
     async def get_choices_durov(self, token: str):
-        url = 'https://raw.githubusercontent.com/Shyzg/major/refs/heads/main/answer.json'
         try:
-            async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.get(url=url) as response:
-                    response.raise_for_status()
-                    response_answer = json.loads(await response.text())
-                    timestam_answer = datetime.fromtimestamp(response_answer['expires']).astimezone().timestamp()
-                    if timestam_answer > datetime.now().astimezone().timestamp():
-                        return await self.durov(token=token, answer=response_answer['answer'])
-                    return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Puzzle Durov ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Get Choices Durov: {str(e)} ]{Style.RESET_ALL}")
+            answer = await self.answer()
+            if answer is not None:
+                if datetime.fromtimestamp(answer['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
+                    return await self.durov(token=token, answer=answer['major']['answer'])
+                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Contact @shyzg To Update Puzzle Durov ]{Style.RESET_ALL}")
         except Exception as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Get Choices Durov: {str(e)} ]{Style.RESET_ALL}")
 
@@ -448,10 +441,10 @@ class Major:
                             for task in tasks:
                                 if not task['is_completed']:
                                     if task['type'] == 'code':
-                                        task_answer = await self.task_answer()
-                                        if task_answer is not None:
-                                            if task['title'] in task_answer:
-                                                answer = task_answer[task['title']]
+                                        answer = await self.answer()
+                                        if answer is not None:
+                                            if task['title'] in answer['youtube']:
+                                                answer = answer['youtube'][task['title']]
                                                 await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id'],'payload':{'code':answer}})
                                                 await asyncio.sleep(random.randint(3, 5))
                                     else:
