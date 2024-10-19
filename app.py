@@ -237,7 +237,7 @@ class Major:
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                    if response.status in [400, 500, 503, 520]:
+                    if response.status in [500, 503, 520]:
                         return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Complete Tasks ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     complete_task = await response.json()
