@@ -242,14 +242,14 @@ class Major:
                     response.raise_for_status()
                     complete_task = await response.json()
                     if complete_task['is_completed']:
-                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {task_award} From {task_title} ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {task_award} $MAJOR From {task_title} ]{Style.RESET_ALL}")
                     return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {task_title} Isn\'t Completed ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Complete Tasks: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Complete Tasks: {str(e)} ]{Style.RESET_ALL}")
 
-    async def answers(self):
+    async def answer(self):
         url = 'https://raw.githubusercontent.com/Shyzg/answer/refs/heads/main/answer.json'
         try:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
@@ -265,10 +265,10 @@ class Major:
 
     async def get_choices_durov(self, token: str):
         try:
-            answers = await self.answers()
-            if answers is not None:
-                if datetime.fromtimestamp(answers['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
-                    return await self.durov(token=token, answer=answers['major']['answer'])
+            answer = await self.answer()
+            if answer is not None:
+                if datetime.fromtimestamp(answer['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
+                    return await self.durov(token=token, answer=answer['major']['answer'])
         except Exception as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Get Choices Durov: {str(e)} ]{Style.RESET_ALL}")
 
@@ -292,7 +292,7 @@ class Major:
                     elif response.status in [500, 503, 520]:
                         return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Puzzle Durov ]{Style.RESET_ALL}")
                     response.raise_for_status()
-                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got 5000 From Puzzle Durov ]{Style.RESET_ALL}")
+                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got 5000 $MAJOR From Puzzle Durov ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Durov: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -320,7 +320,7 @@ class Major:
                     response.raise_for_status()
                     coins = await response.json()
                     if coins['success']:
-                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_coins} From Hold Coin ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_coins} $MAJOR From Hold Coin ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Hold Coins: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -346,7 +346,7 @@ class Major:
                         return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Roulette ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     roulette = await response.json()
-                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {roulette['rating_award']} From Roulette ]{Style.RESET_ALL}")
+                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {roulette['rating_award']} $MAJOR From Roulette ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Roulette: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -374,7 +374,7 @@ class Major:
                     response.raise_for_status()
                     swipe_coin = await response.json()
                     if swipe_coin['success']:
-                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_swipe_coins} From Swipe Coin ]{Style.RESET_ALL}")
+                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_swipe_coins} $MAJOR From Swipe Coin ]{Style.RESET_ALL}")
         except ClientResponseError as e:
             return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Swipe Coin: {str(e)} ]{Style.RESET_ALL}")
         except Exception as e:
@@ -437,11 +437,11 @@ class Major:
                             for task in tasks:
                                 if not task['is_completed']:
                                     if task['type'] == 'code':
-                                        answers = await self.answers()
-                                        if answers is not None:
-                                            if task['title'] in answers['major']['youtube']:
-                                                answer = answers['major']['youtube'][task['title']]
-                                                await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id'],'payload':{'code':answer}})
+                                        answer = await self.answer()
+                                        if answer is not None:
+                                            if task['title'] in answer['major']['youtube']:
+                                                code = answer['major']['youtube'][task['title']]
+                                                await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id'],'payload':{'code':code}})
                                                 await asyncio.sleep(3)
                                     else:
                                         await self.complete_task(token=token, task_title=task['title'], task_award=task['award'], payload={'task_id':task['id']})
@@ -499,7 +499,7 @@ if __name__ == '__main__':
             accounts = int(input(
                 f"{Fore.BLUE + Style.BRIGHT}[ {datetime.now().astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                f"{Fore.YELLOW + Style.BRIGHT}[ How Much Account That You Want To Process Each Terminal ]{Style.RESET_ALL}"
+                f"{Fore.YELLOW + Style.BRIGHT}[ How Much Account Each 'queries-*.txt'? ]{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
             ))
             major.process_queries(lines_per_file=accounts)
