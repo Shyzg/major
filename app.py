@@ -7,6 +7,7 @@ from colorama import *
 from datetime import datetime, timedelta
 from fake_useragent import FakeUserAgent
 from faker import Faker
+from random import randint
 from urllib.parse import parse_qs
 import asyncio, json, os, re, sys
 
@@ -417,12 +418,12 @@ class Major:
                         f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                     )
                     await self.get_choices_durov(token=token)
-                    await asyncio.sleep(3)
-                    await self.coins(token=token, reward_coins=915)
-                    await asyncio.sleep(3)
+                    await asyncio.sleep(60)
+                    await self.coins(token=token, reward_coins=randint(500, 750))
+                    await asyncio.sleep(60)
                     await self.roulette(token=token)
-                    await asyncio.sleep(3)
-                    await self.swipe_coin(token=token, reward_swipe_coins=3200)
+                    await asyncio.sleep(60)
+                    await self.swipe_coin(token=token, reward_swipe_coins=randint(1600, 2400))
 
                 for (token, id, name) in accounts:
                     self.print_timestamp(
