@@ -7,7 +7,6 @@ from colorama import *
 from datetime import datetime, timedelta
 from fake_useragent import FakeUserAgent
 from faker import Faker
-from random import randint
 from urllib.parse import parse_qs
 import asyncio, json, os, re, sys
 
@@ -173,38 +172,6 @@ class Major:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching User: {str(e)} ]{Style.RESET_ALL}")
             return None
 
-    async def join_squad(self, token: str):
-        url = f'https://major.bot/api/squads/1904705154/join/'
-        headers = {
-            **self.headers,
-            'Authorization': f"Bearer {token}",
-            'Content-Length': '0'
-        }
-        try:
-            async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, ssl=False) as response:
-                    response.raise_for_status()
-                    join_squad = await response.json()
-                    if join_squad['status'] == 'ok': return True
-        except (Exception, ClientResponseError):
-            return False
-
-    async def leave_squad(self, token: str):
-        url = f'https://major.bot/api/squads/leave/'
-        headers = {
-            **self.headers,
-            'Authorization': f"Bearer {token}",
-            'Content-Length': '0'
-        }
-        try:
-            async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, ssl=False) as response:
-                    response.raise_for_status()
-                    leave_squad = await response.json()
-                    if leave_squad['status'] == 'ok': return await self.join_squad(token=token)
-        except (Exception, ClientResponseError):
-            return False
-
     async def tasks(self, token: str, type: str):
         url = f'https://major.bot/api/tasks/?is_daily={type}'
         headers = {
@@ -264,126 +231,10 @@ class Major:
             self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Get Task Answer: {str(e)} ]{Style.RESET_ALL}")
             return None
 
-    async def get_choices_durov(self, token: str):
-        try:
-            answer = await self.answer()
-            if answer is not None:
-                if datetime.fromtimestamp(answer['expires']).astimezone().timestamp() > datetime.now().astimezone().timestamp():
-                    return await self.durov(token=token, answer=answer['major']['answer'])
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Get Choices Durov: {str(e)} ]{Style.RESET_ALL}")
-
-    async def durov(self, token: str, answer: dict):
-        url = 'https://major.bot/api/durov/'
-        data = json.dumps(answer)
-        headers = {
-            **self.headers,
-            'Authorization': f"Bearer {token}",
-            'Content-Length': str(len(data)),
-            'Content-Type': 'application/json'
-        }
-        try:
-            async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                    if response.status == 400:
-                        error_durov = await response.json()
-                        if 'detail' in error_durov:
-                            if 'blocked_until' in error_durov['detail']:
-                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Puzzle Durov At {datetime.fromtimestamp(error_durov['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
-                    elif response.status in [500, 503, 520]:
-                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Puzzle Durov ]{Style.RESET_ALL}")
-                    response.raise_for_status()
-                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got 5000 $MAJOR From Puzzle Durov ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Durov: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Durov: {str(e)} ]{Style.RESET_ALL}")
-
-    async def coins(self, token: str, reward_coins: int):
-        url = 'https://major.bot/api/bonuses/coins/'
-        data = json.dumps({'coins':reward_coins})
-        headers = {
-            **self.headers,
-            'Authorization': f"Bearer {token}",
-            'Content-Length': str(len(data)),
-            'Content-Type': 'application/json'
-        }
-        try:
-            async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                    if response.status == 400:
-                        error_coins = await response.json()
-                        if 'detail' in error_coins:
-                            if 'blocked_until' in error_coins['detail']:
-                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Hold Coin At {datetime.fromtimestamp(error_coins['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
-                    elif response.status in [500, 503, 520]:
-                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Hold Coin ]{Style.RESET_ALL}")
-                    response.raise_for_status()
-                    coins = await response.json()
-                    if coins['success']:
-                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_coins} $MAJOR From Hold Coin ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Hold Coins: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Play Hold Coins: {str(e)} ]{Style.RESET_ALL}")
-
-    async def roulette(self, token: str):
-        url = 'https://major.bot/api/roulette/'
-        headers = {
-            **self.headers,
-            'Authorization': f"Bearer {token}",
-            'Content-Length': '0',
-            'Content-Type': 'application/json'
-        }
-        try:
-            async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, ssl=False) as response:
-                    if response.status == 400:
-                        error_roulette = await response.json()
-                        if 'detail' in error_roulette:
-                            if 'blocked_until' in error_roulette['detail']:
-                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Roulette At {datetime.fromtimestamp(error_roulette['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
-                    elif response.status in [500, 503, 520]:
-                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Roulette ]{Style.RESET_ALL}")
-                    response.raise_for_status()
-                    roulette = await response.json()
-                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {roulette['rating_award']} $MAJOR From Roulette ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Roulette: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Play Rouelette: {str(e)} ]{Style.RESET_ALL}")
-
-    async def swipe_coin(self, token: str, reward_swipe_coins: int):
-        url = 'https://major.bot/api/swipe_coin/'
-        data = json.dumps({'coins':reward_swipe_coins})
-        headers = {
-            **self.headers,
-            'Authorization': f"Bearer {token}",
-            'Content-Length': str(len(data)),
-            'Content-Type': 'application/json'
-        }
-        try:
-            async with ClientSession(timeout=ClientTimeout(total=20)) as session:
-                async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
-                    if response.status == 400:
-                        error_swipe_coin = await response.json()
-                        if 'detail' in error_swipe_coin:
-                            if 'blocked_until' in error_swipe_coin['detail']:
-                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Play Swipe Coin At {datetime.fromtimestamp(error_swipe_coin['detail']['blocked_until']).astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
-                    elif response.status in [500, 503, 520]:
-                        return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Server Major Down While Play Swipe Coin ]{Style.RESET_ALL}")
-                    response.raise_for_status()
-                    swipe_coin = await response.json()
-                    if swipe_coin['success']:
-                        return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {reward_swipe_coins} $MAJOR From Swipe Coin ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Play Swipe Coin: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Play Swipe Coin: {str(e)} ]{Style.RESET_ALL}")
-
-    async def main(self, queries: str):
+    async def main(self):
         while True:
             try:
+                queries = [line.strip() for line in open('queries.txt') if line.strip()]
                 accounts = await self.generate_tokens(queries=queries)
                 total_rating = 0
 
@@ -405,25 +256,7 @@ class Major:
                             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
                             f"{Fore.BLUE + Style.BRIGHT}[ Streak {streak['streak']} ]{Style.RESET_ALL}"
                         )
-                        if user['squad_id'] is None:
-                            await self.join_squad(token=token)
-                        elif user['squad_id'] != 1904705154:
-                            await self.leave_squad(token=token)
                         total_rating += user['rating']
-
-                for (token, id, name) in accounts:
-                    self.print_timestamp(
-                        f"{Fore.WHITE + Style.BRIGHT}[ Games ]{Style.RESET_ALL}"
-                        f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                        f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
-                    )
-                    await self.get_choices_durov(token=token)
-                    await asyncio.sleep(60)
-                    await self.coins(token=token, reward_coins=randint(500, 750))
-                    await asyncio.sleep(60)
-                    await self.roulette(token=token)
-                    await asyncio.sleep(60)
-                    await self.swipe_coin(token=token, reward_swipe_coins=randint(1600, 2400))
 
                 for (token, id, name) in accounts:
                     self.print_timestamp(
@@ -471,72 +304,7 @@ if __name__ == '__main__':
         init(autoreset=True)
         major = Major()
 
-        queries_files = [f for f in os.listdir() if f.startswith('queries-') and f.endswith('.txt')]
-        queries_files.sort(key=lambda x: int(re.findall(r'\d+', x)[0]) if re.findall(r'\d+', x) else 0)
-
-        major.print_timestamp(
-            f"{Fore.GREEN + Style.BRIGHT}[ 1 ]{Style.RESET_ALL}"
-            f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            f"{Fore.BLUE + Style.BRIGHT}[ Split Queries ]{Style.RESET_ALL}"
-        )
-        major.print_timestamp(
-            f"{Fore.GREEN + Style.BRIGHT}[ 2 ]{Style.RESET_ALL}"
-            f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            f"{Fore.BLUE + Style.BRIGHT}[ Use Existing 'queries-*.txt' ]{Style.RESET_ALL}"
-        )
-        major.print_timestamp(
-            f"{Fore.GREEN + Style.BRIGHT}[ 3 ]{Style.RESET_ALL}"
-            f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            f"{Fore.BLUE + Style.BRIGHT}[ Use 'queries.txt' Without Splitting ]{Style.RESET_ALL}"
-        )
-
-        initial_choice = int(input(
-            f"{Fore.BLUE + Style.BRIGHT}[ {datetime.now().astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}"
-            f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            f"{Fore.YELLOW + Style.BRIGHT}[ Select An Option ]{Style.RESET_ALL}"
-            f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-        ))
-        if initial_choice == 1:
-            accounts = int(input(
-                f"{Fore.BLUE + Style.BRIGHT}[ {datetime.now().astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}"
-                f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                f"{Fore.YELLOW + Style.BRIGHT}[ How Much Account Each 'queries-*.txt'? ]{Style.RESET_ALL}"
-                f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            ))
-            major.process_queries(lines_per_file=accounts)
-
-            queries_files = [f for f in os.listdir() if f.startswith('queries-') and f.endswith('.txt')]
-            queries_files.sort(key=lambda x: int(re.findall(r'\d+', x)[0]) if re.findall(r'\d+', x) else 0)
-            if not queries_files:
-                raise FileNotFoundError("No 'queries-*.txt' Files Found")
-        elif initial_choice == 2:
-            if not queries_files:
-                raise FileNotFoundError("No 'queries-*.txt' Files Found")
-        elif initial_choice == 3:
-            queries = [line.strip() for line in open('queries.txt') if line.strip()]
-        else:
-            raise ValueError("Invalid Initial Choice. Please Run The Script Again And Choose A Valid Option")
-
-        if initial_choice in [1, 2]:
-            for i, queries_file in enumerate(queries_files, start=1):
-                major.print_timestamp(
-                    f"{Fore.GREEN + Style.BRIGHT}[ {i} ]{Style.RESET_ALL}"
-                    f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                    f"{Fore.BLUE + Style.BRIGHT}[ {queries_file} ]{Style.RESET_ALL}"
-                )
-
-            choice = int(input(
-                f"{Fore.BLUE + Style.BRIGHT}[ {datetime.now().astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}"
-                f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                f"{Fore.YELLOW + Style.BRIGHT}[ Select 'queries-*.txt' File ]{Style.RESET_ALL}"
-                f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-            )) - 1
-            if choice < 0 or choice >= len(queries_files):
-                raise ValueError("Invalid Choice. Please Run The Script Again And Choose A Valid Option")
-
-            selected_file = queries_files[choice]
-            queries = major.load_queries(selected_file)
-        asyncio.run(major.main(queries=queries))
+        asyncio.run(major.main())
     except (ValueError, IndexError, FileNotFoundError) as e:
         major.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}")
     except KeyboardInterrupt:
